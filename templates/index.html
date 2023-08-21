@@ -1,0 +1,50 @@
+<p>Hello, World! <span style="font-style: italic">(on index.html)</span></p>
+
+<form action="{{request.url}}" method="post" role="form" class="mail-contact-form" id="mail-contact-form">
+    <input type="hidden" name="form-name" value="mail-contact-form" />
+  <div class="row" {% if error_code == 0 and request.method == "POST" %}style="display:none"{% endif %}>
+    <div class="col-md-6 form-group">
+      <input type="text" name="name" class="form-control" id="name" placeholder="Your Name" value="{{request.form['name']}}" required>
+    </div>
+    <div class="col-md-6 form-group mt-3 mt-md-0">
+      <input type="email" class="form-control" name="email" id="email" placeholder="Your Email" value="{{request.form['email']}}" required>
+    </div>
+  </div>
+  <div class="form-group mt-3" {% if error_code == 0 and request.method == "POST" %}style="display:none"{% endif %}>
+    <input type="text" class="form-control" name="subject" id="subject" placeholder="Subject" value="{{request.form['subject']}}" required>
+  </div>
+  <div class="form-group mt-3" {% if error_code == 0 and request.method == "POST" %}style="display:none"{% endif %}>
+    <textarea class="form-control" name="message" rows="5" placeholder="Message" required>{{request.form['message']}}</textarea>
+  </div>
+  <div class="form-group mt-3" {% if error_code == 0 and request.method == "POST" %}style="display:none"{% endif %}>
+    <input type="text" class="form-control" name="check" id="check" placeholder="Robot check, do this calc: {{' + '.join(check_ip_string)}}" value="{{request.form['check']}}" required>
+  </div>
+  {% if request.method == "POST" and request.form['email'] and request.form['name'] and request.form['message'] %}
+  <div class="my-3">
+    {% if error_code == 0 and request.method == "POST" %}
+        <div class="sent-message" style="display:block">Your message has been sent. Thank you!</div>
+    {% elif error_code == 1 %}
+        <div class="error-message" style="display:block">{{error_msg}}</div>
+    {% elif error_code == 2 %}
+        <div class="error-message" style="display:block">Robot check failed. Re-Try.</div>
+    {% endif %}
+  </div>
+  {% endif %}
+  <div class="text-center" {% if error_code == 0 and request.method == "POST" %}style="display:none"{% endif %}>
+      <button class="g-recaptcha" 
+            {% if config.EMAIL_SEND %}
+            data-sitekey="{{config.RECAPTCHA_V3_PUBLIC_KEY}}" 
+            data-callback='onSubmit' 
+            data-action='submit' 
+            {% endif %}
+            type='submit'>Send Message</button>
+  </div>
+</form>
+{% if config.EMAIL_SEND %}
+<script src="https://www.google.com/recaptcha/api.js"></script>
+<script>
+function onSubmit(token) {
+    document.getElementById("mail-contact-form").submit();
+}
+</script>
+{% endif %}
