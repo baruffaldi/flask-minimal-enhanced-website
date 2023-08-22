@@ -7,9 +7,10 @@ import random
 import logging
 import datetime
 import requests
+import magic
 
-from flask import Flask, request, render_template, send_from_directory, \
-                current_app, session, url_for
+from flask import Flask, request, send_file, render_template, \
+                send_from_directory, current_app, session, url_for
 
 from htmlmin.main import minify
 from html.parser import HTMLParser
@@ -429,13 +430,9 @@ def configure_error_handlers(app):
  *
 """
 
-@app.route("/helloworld")
-def helloworld():
-    return "<p>Hello, World!</p>"
-
 @app.route("/favicon.ico")
 def favicon():
-    return send_from_directory(os.path.join(os.path.join(app.root_path, 'static'), 'images'),
+    return send_from_directory(os.path.join(env_config.BASE_PATH, 'images'),
                 'favicon.ico',mimetype='image/vnd.microsoft.icon')
 
 @app.route("/", methods=["GET", "POST"], defaults={'path': "index.html"})
@@ -467,32 +464,47 @@ def template_render_path(path):
                 ) == int(request.form['check']) )
             except Exception:
                 return False
-    
+
         if is_valid():
             try:
-                print('sending')
                 if env_config.EMAIL_SEND:
-                    print('sending2')
                     msg = Message(
                         'Website message: ' + request.form['subject'],
                         sender=(env_config.WEBSITE, env_config.EMAIL_SENDER),
                         recipients=[(env_config.EMAIL_DEST, env_config.EMAIL_DEST_NAME)]
                     )
-                    print('sending3')
                     msg.body = f'IP:{request.remote_addr}' + '\n\n' + request.form['message']
-                    print('sending4')
-                    print(msg.body)
-                    print((env_config.WEBSITE, env_config.EMAIL_SENDER))
-                    print((env_config.EMAIL_DEST, env_config.EMAIL_DEST_NAME))
-                    print(msg)
-                    print('sending5')
-                    print(mail.send(msg))
-                    print('sent')
+                    mail.send(msg)
             except Exception as e:
                 error_code = 1
                 error_msg = str(e)
         else:
             error_code = 2
             error_msg = "Robot check validation failed."
-            
-    return render_template(path, error_code=error_code, error_msg=error_msg)
+
+    paths = [
+        f'{env_config.TEMPLATES_PATH}{os.sep}{path}',
+        f'{env_config.TEMPLATES_PATH}{os.sep}{path}.htm',
+        f'{env_config.TEMPLATES_PATH}{os.sep}{path}.html',
+        f'{env_config.STATIC_TEMPLATES_PATH}{os.sep}{path}',
+        f'{env_config.STATIC_TEMPLATES_PATH}{os.sep}{path}.htm',
+        f'{env_config.STATIC_TEMPLATES_PATH}{os.sep}{path}.html',
+    ]
+
+    for path in paths:
+        print(path)
+        if os.path.exists(path):
+            print('exists')
+            mime = magic.Magic(mime=True)
+            mime_type = mime.from_file(path)
+            print(mime_type)
+
+            if mime_type:
+                if path.startswith(env_config.TEMPLATES_PATH):
+                    return render_template(path[len(env_config.TEMPLATES_PATH)+1:], error_code=error_code, error_msg=error_msg)
+                else:
+                    return send_file(path, mimetype=mime_type)
+            else:
+                return "MIME type not supported for this file."
+
+    return "Not found"

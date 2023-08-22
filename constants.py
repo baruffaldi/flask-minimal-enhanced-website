@@ -28,10 +28,16 @@ DB_RESULT_DATE_TIME_FORMAT = environ.get('DB_RESULT_DATE_TIME_FORMAT') or '%Y-%m
 
 # PATHs
 APPLICATION_PATH = pathlib.Path(__file__).parent.resolve()
-INSTANCE_FOLDER_PATH = path.dirname(path.abspath(__file__))
-BASE_PATH = path.abspath(path.join(INSTANCE_FOLDER_PATH, '..'))
+BASE_PATH = path.dirname(path.abspath(__file__))
+INSTANCE_FOLDER_PATH = path.abspath(path.join(BASE_PATH, '..'))
 STATIC_PATH = path.join(BASE_PATH, 'static')
 makedirs(STATIC_PATH, 0o777, exist_ok=True)
+
+TEMPLATES_PATH = path.join(BASE_PATH, 'templates')
+makedirs(TEMPLATES_PATH, 0o777, exist_ok=True)
+
+STATIC_TEMPLATES_PATH = path.join(BASE_PATH, 'static-templates')
+makedirs(STATIC_TEMPLATES_PATH, 0o777, exist_ok=True)
 
 STATIC_IMAGES_PATH = path.join(STATIC_PATH, 'images')
 makedirs(STATIC_IMAGES_PATH, 0o777, exist_ok=True)
@@ -42,6 +48,8 @@ PATHS = {
     'BASE_PATH': BASE_PATH,
     'STATIC_PATH': STATIC_PATH,
     'STATIC_IMAGES_PATH': STATIC_IMAGES_PATH,
+    'TEMPLATES_PATH': TEMPLATES_PATH,
+    'STATIC_TEMPLATES_PATH': STATIC_TEMPLATES_PATH,
 }
 
 # URLs
