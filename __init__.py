@@ -9,7 +9,7 @@ import datetime
 import requests
 import magic
 
-from flask import Flask, request, send_file, render_template, \
+from flask import Flask, request, send_file, render_template, make_response, \
                 send_from_directory, current_app, session, url_for
 
 from htmlmin.main import minify
@@ -492,16 +492,15 @@ def template_render_path(path):
     ]
 
     for path in paths:
-        print(path)
         if os.path.exists(path):
-            print('exists')
             mime = magic.Magic(mime=True)
             mime_type = mime.from_file(path)
-            print(mime_type)
 
             if mime_type:
                 if path.startswith(env_config.TEMPLATES_PATH):
-                    return render_template(path[len(env_config.TEMPLATES_PATH)+1:], error_code=error_code, error_msg=error_msg)
+                    response = make_response(render_template(path[len(env_config.TEMPLATES_PATH)+1:], error_code=error_code, error_msg=error_msg))
+                    response.headers['Content-Type'] = mime_type
+                    return response
                 else:
                     return send_file(path, mimetype=mime_type)
             else:
