@@ -405,7 +405,7 @@ def configure_error_handlers(app):
         return (
             ("Oops! You don't have permission to access this page.", 403)
             if request.is_json
-            else (render_template(f'http_statuses/403.html'), 403)
+            else (render_template('http_statuses/403.html'), 403)
         )
 
     @app.errorhandler(404)
@@ -413,7 +413,7 @@ def configure_error_handlers(app):
         return (
             ("Ooops! Page not found.", 404)
             if request.is_json
-            else (render_template(f'http_statuses/404.html'), 404)
+            else (render_template('http_statuses/404.html'), 404)
         )
 
     @app.errorhandler(500)
@@ -421,7 +421,7 @@ def configure_error_handlers(app):
         return (
             ("Oops! Internal server error. Please try after sometime.", 500)
             if request.is_json
-            else (render_template(f'http_statuses/500.html'), 500)
+            else (render_template('http_statuses/500.html'), 500)
         )
 
 """
@@ -435,12 +435,7 @@ def favicon():
     return send_from_directory(os.path.join(env_config.BASE_PATH, 'images'),
                 'favicon.ico',mimetype='image/vnd.microsoft.icon')
 
-@app.route("/digital-contact-card")
-def digital_contact_card():
-    return send_from_directory(env_config.BASE_PATH,
-                'vcard_finalmente_casa.vcf', mimetype='text/x-vcard')
-
-@app.route("/", methods=["GET", "POST"], defaults={'path': f'index.html'})
+@app.route("/", methods=["GET", "POST"], defaults={'path': "index.html"})
 @app.route("/<path:path>", methods=["GET", "POST"])
 def template_render_path(path):
     error_code = 0
@@ -478,7 +473,7 @@ def template_render_path(path):
                         sender=(env_config.WEBSITE, env_config.EMAIL_SENDER),
                         recipients=[(env_config.EMAIL_DEST, env_config.EMAIL_DEST_NAME)]
                     )
-                    msg.body = render_template(f'mails/contact.html')
+                    msg.body = f'IP:{request.remote_addr}' + '\n\n' + request.form['message']
                     mail.send(msg)
             except Exception as e:
                 error_code = 1
@@ -488,12 +483,12 @@ def template_render_path(path):
             error_msg = "Robot check validation failed."
 
     paths = [
-        f'{env_config.DYNAMIC_TEMPLATES_PATH}/{path}',
-        f'{env_config.DYNAMIC_TEMPLATES_PATH}/{path}.htm',
-        f'{env_config.DYNAMIC_TEMPLATES_PATH}/{path}.html',
-        f'{env_config.STATIC_TEMPLATES_PATH}/{path}',
-        f'{env_config.STATIC_TEMPLATES_PATH}/{path}.htm',
-        f'{env_config.STATIC_TEMPLATES_PATH}/{path}.html',
+        f'{env_config.TEMPLATES_PATH}{os.sep}{path}',
+        f'{env_config.TEMPLATES_PATH}{os.sep}{path}.htm',
+        f'{env_config.TEMPLATES_PATH}{os.sep}{path}.html',
+        f'{env_config.STATIC_TEMPLATES_PATH}{os.sep}{path}',
+        f'{env_config.STATIC_TEMPLATES_PATH}{os.sep}{path}.htm',
+        f'{env_config.STATIC_TEMPLATES_PATH}{os.sep}{path}.html',
     ]
 
     for path in paths:
@@ -502,8 +497,8 @@ def template_render_path(path):
             mime_type = mime.from_file(path)
 
             if mime_type:
-                if path.startswith(env_config.DYNAMIC_TEMPLATES_PATH):
-                    response = make_response(render_template(f'{path[len(env_config.TEMPLATES_PATH)+1:]}', error_code=error_code, error_msg=error_msg))
+                if path.startswith(env_config.TEMPLATES_PATH):
+                    response = make_response(render_template(path[len(env_config.TEMPLATES_PATH)+1:], error_code=error_code, error_msg=error_msg))
                     response.headers['Content-Type'] = mime_type
                     return response
                 else:
